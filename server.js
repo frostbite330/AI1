@@ -1,10 +1,11 @@
-import express from "express";
-import Groq from "groq-sdk";
-import cors from "cors";
-import dotenv from "dotenv";
+require("dotenv").config();
 
-// Load environment variables
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+
+const db = require("./db"); // initialize database
+const authRoutes = require("./routes/auth");
 
 const app = express();
 
@@ -12,55 +13,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Check if API key exists
-if (!process.env.GROQ_API_KEY) {
-  console.error("❌ GROQ_API_KEY is missing in .env file");
-  process.exit(1);
-}
+// 🔥 Serve static files from public folder
+app.use(express.static(path.join(__dirname, "public")));
 
-// Initialize Groq client
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+// API Routes
+app.use("/api/auth", authRoutes);
+
+// 🔥 Fallback route (for frontend routing if needed)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("🚀 AI Server is running successfully!");
-});
-
-// Chat route
-app.post("/chat", async (req, res) => {
-  try {
-    const userMessage = req.body.message;
-
-    if (!userMessage) {
-      return res.status(400).json({ error: "Message is required" });
-    }
-
-    const response = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are a helpful AI assistant." },
-        { role: "user", content: userMessage }
-      ],
-      model: "llama-3.1-8b-instant",
-    });
-
-    res.json({
-      reply: response.choices[0].message.content
-    });
-
-  } catch (error) {
-    console.error("Server Error:", error);
-    res.status(500).json({
-      error: "Something went wrong on the server"
-    });
-  }
-});
-
-// Use dynamic port (for Render deployment)
+// Start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌍 http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
