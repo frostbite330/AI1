@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import cors from "cors";
 import { fileURLToPath } from "url";
 
 dotenv.config();
@@ -14,23 +15,25 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files (HTML, CSS, JS)
+app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
+
+// Auth routes - create routes/auth.js first
+import authRouter from "./routes/auth.js";
+app.use("/api/auth", authRouter);
 
 // Home route
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Catch-all route (important for SPA)
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+// ✅ FIXED: Express 5 wildcard syntax - use regex instead of "*"
+app.get(/(.*)/, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Port setup (Render needs this)
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Auth endpoints: POST /api/auth/register, POST /api/auth/login`);
 });

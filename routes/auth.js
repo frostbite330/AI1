@@ -1,16 +1,17 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const db = require("../db");
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import db from "../db.js";  // Note .js extension required in ESM
 
 const router = express.Router();
 
+// REGISTER
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const stmt = db.prepare(
       "INSERT INTO users (username, password) VALUES (?, ?)"
     );
@@ -22,6 +23,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// LOGIN
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -38,8 +40,7 @@ router.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-
   res.json({ token });
 });
 
-module.exports = router;
+export default router;
