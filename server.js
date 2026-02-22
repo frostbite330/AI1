@@ -1,32 +1,36 @@
-require("dotenv").config();
+import express from "express";
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-
-const db = require("./db"); // initialize database
-const authRoutes = require("./routes/auth");
+dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Fix __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 🔥 Serve static files from public folder
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
-// API Routes
-app.use("/api/auth", authRoutes);
-
-// 🔥 Fallback route (for frontend routing if needed)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// Home route
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Start server
+// Catch-all route (important for SPA)
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Port setup (Render needs this)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
